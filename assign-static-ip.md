@@ -1,4 +1,4 @@
-sudo nano /etc/dhcpcd.con
+`sudo nano /etc/dhcpcd.con`
 
 roll all the way down to the file and add these lines
 I use ethernet so here is what needed to be added:
