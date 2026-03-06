@@ -1,0 +1,192 @@
+一、整体架构
+
+先理解角色分工：
+
+Users / Bots
+      │
+      ▼
+Pi cluster (k3s)
+  ├─ OpenClaw
+  ├─ LiteLLM gateway
+  ├─ Flowise
+  ├─ Qdrant
+  └─ automation
+      │
+      ▼
+T7810
+  ├─ LLM runtime
+  ├─ embeddings
+  └─ heavy compute
+
+核心思想：
+
+Pi cluster = 控制层
+T7810 = 算力层
+二、第一步：把 T7810 当 “AI compute node”
+
+先不要急着搞 Kubernetes。
+
+直接装：
+
+Ubuntu Server
+
+推荐：
+
+Ubuntu Server 22.04
+
+安装完做几件事：
+
+apt update
+apt upgrade
+apt install docker
+三、第二步：在 T7810 跑 LLM runtime
+
+最简单的是：
+
+Ollama
+
+安装：
+
+curl -fsSL https://ollama.com/install.sh | sh
+
+然后测试：
+
+ollama run llama3
+
+之后你可以运行：
+
+qwen
+mistral
+deepseek
+四、第三步：让 Pi cluster 调用 T7810
+
+Ollama 默认 API：
+
+http://T7810-IP:11434
+
+你的 Pi cluster 里：
+
+OpenClaw
+
+配置 LLM endpoint：
+
+http://T7810-IP:11434/v1
+LiteLLM gateway
+
+你可以在 Pi cluster 跑：
+
+LiteLLM
+
+它可以：
+
+统一所有模型
+做负载均衡
+做fallback
+
+结构变成：
+
+Pi cluster
+LiteLLM
+   │
+   ├─ cloud LLM
+   └─ T7810 local LLM
+五、第四步：RAG
+
+在 Pi cluster 运行：
+
+Qdrant
+
+用途：
+
+存 embeddings
+做 semantic search
+
+流程：
+
+documents
+   │
+embedding
+   │
+Qdrant
+   │
+LLM
+
+embedding 可以：
+
+Pi cluster 跑小模型
+
+或 T7810 跑
+
+六、第五步：Flowise / AI pipeline
+
+推荐装：
+
+Flowise
+
+它可以：
+
+拖拽AI pipeline
+RAG
+agent
+tools
+memory
+
+很多 homelab 都在用。
+
+七、未来 GPU 来了以后
+
+如果你以后加：
+
+NVIDIA Tesla P40
+
+架构不需要改。
+
+只需要：
+
+安装 CUDA
+安装 Ollama GPU support
+
+T7810 自动变成：
+
+LLM inference node
+八、如果以后你想玩更高级架构
+
+你可以把 T7810 加入：
+
+k3s cluster
+
+变成：
+
+Pi cluster (control plane)
+T7810 (worker node)
+
+但 一开始没必要。
+
+九、最推荐的第一版 stack
+
+我建议先跑：
+
+Pi cluster
+ ├ OpenClaw
+ ├ LiteLLM
+ ├ Qdrant
+ └ Flowise
+
+T7810
+ └ Ollama
+
+这是 AI homelab 最经典的组合。
+
+十、你会得到什么
+
+你的 homelab 会变成：
+
+本地 ChatGPT
+RAG
+AI agent
+automation
+AI API
+
+基本就是：
+
+personal AI platform
